@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Onboarding a new PUMF</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Onboarding a new PUMF</h1>
+
+
+
+<p>This vignette explains how to bring a Statistics Canada PUMF that
+<code>canpumf</code> does not yet know about into the package: a
+brand-new release year of a survey already covered (e.g. the next cycle
+of the Canadian Housing Survey the day it ships), or an entirely new
+survey series.</p>
+<p>The happy path is “drop the files in the right place and call
+<code>get_pumf()</code>”. When that is not enough, the second half of
+this vignette walks through the deliberate, low-risk workflow for
+figuring out the configuration a survey needs — parse the metadata
+first, borrow a registry entry from a related survey, tweak until the
+parse is clean, and only then build the full table.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(canpumf)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div>
+<hr />
+<div id="naming-conventions-and-where-to-put-the-files" class="section level2">
+<h2>Naming conventions and where to put the files</h2>
+<p>Everything lives under a single cache directory. Set it once, ideally
+in your <code>.Rprofile</code>, so data persists across sessions:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">options</span>(<span class="at">canpumf.cache_path =</span> <span class="st">&quot;~/data/pumf.data&quot;</span>)</span></code></pre></div>
+<p>Without this option the cache falls back to <code>tempdir()</code>
+and is discarded at the end of the session.</p>
+<p>The cache is organised strictly by <strong>series</strong> and
+<strong>version</strong>:</p>
+<pre><code>&lt;cache_path&gt;/
+  &lt;series&gt;/
+    &lt;version&gt;/
+      &lt;original&gt;.zip              # the StatCan download, retained
+      &lt;series&gt;_&lt;version&gt;.duckdb   # built by canpumf
+      metadata/                   # canonical CSVs, written by canpumf
+        variables.csv
+        codes.csv
+        layout.csv                # only for fixed-width data</code></pre>
+<p>The two names you choose — <code>&lt;series&gt;</code> and
+<code>&lt;version&gt;</code> — are the identifiers you will pass to
+<code>get_pumf(series, version)</code>. A few conventions matter:</p>
+<ul>
+<li><strong><code>series</code></strong> is the survey acronym used
+throughout the package: <code>&quot;SHS&quot;</code>, <code>&quot;SFS&quot;</code>,
+<code>&quot;CHS&quot;</code>, <code>&quot;GSS&quot;</code>, <code>&quot;ITS&quot;</code>,
+<code>&quot;SGVP&quot;</code>, <code>&quot;Census&quot;</code>, <code>&quot;LFS&quot;</code>, … Use
+the existing acronym for a new year of an existing survey so it joins
+its siblings. For a genuinely new survey pick a short, stable
+acronym.</li>
+<li><strong><code>version</code></strong> is normally the four-digit
+reference year (<code>&quot;2023&quot;</code>). Sticking to a bare year is what
+unlocks the smart fallback described below. Census uses multi-part
+versions (<code>&quot;2021 (individuals)&quot;</code>) and LFS accumulates all
+versions into one shared database — those are special-cased and
+documented in their own vignettes.</li>
+</ul>
+<p>To deposit a PUMF manually, create the version directory and drop the
+StatCan zip into it (extracted files are fine too — <code>canpumf</code>
+will unzip nested archives on first use):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">&quot;~/data/pumf.data/CHS/2025&quot;</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="st">&quot;~/Downloads/2025.zip&quot;</span>, <span class="st">&quot;~/data/pumf.data/CHS/2025/&quot;</span>)</span></code></pre></div>
+<p>For surveys that <code>canpumf</code> knows how to download, you can
+skip the manual copy entirely and let <code>get_pumf()</code> fetch the
+zip (see <code>list_canpumf_collection()</code> /
+<code>list_pumf_registry()</code>). Manual deposit is for the case where
+the file is brand-new, EFT-only, or otherwise not yet wired into the
+collection table.</p>
+<hr />
+</div>
+<div id="smart-defaults-and-the-newest-sibling-fallback" class="section level2">
+<h2>Smart defaults and the newest-sibling fallback</h2>
+<p>A survey’s configuration lives in the <strong>registry</strong>
+(<code>R/registry.R</code>): which file in the directory is the data
+file (<code>file_mask</code>), how the bootstrap-weight file joins
+(<code>bsw_*</code>), encodings, and per-variable fixups. Surveys with
+no registry entry fall back to <strong>auto-detection</strong>, which
+inspects the directory and picks the data file and metadata parser
+heuristically.</p>
+<p>Two design choices make new years onboard with little or no work:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Generic year masks.</strong> Recent entries use a
+<code>\d{4}</code> placeholder instead of a hard-coded year, e.g. the
+CHS data file mask is <code>chs\d{4}ecl_pumf\.csv</code> rather than
+<code>chs2022ecl_pumf\.csv</code>. Because each version directory
+contains exactly one year’s files, the generic pattern resolves
+unambiguously and a new year needs no edit to the mask.</p></li>
+<li><p><strong>Newest-sibling config inheritance.</strong> When you
+request a bare-year version that has <em>no</em> registry entry, and the
+same series has at least one other year-keyed entry,
+<code>pumf_registry_lookup()</code> automatically reuses the config of
+the newest sibling whose year is at or before the one you asked for (or
+the oldest sibling if your year predates them all). It prints a one-time
+message so the reuse is visible:</p></li>
+</ol>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Suppose CHS/2025 has just been released and is not in the registry yet.</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">get_pumf</span>(<span class="st">&quot;CHS&quot;</span>, <span class="st">&quot;2025&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; No CHS/2025 registry entry; inheriting config from CHS/2022. Verify the new</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; release matches (file layout, codes, BSW join) and add an explicit entry if</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; it differs.</span></span></code></pre></div>
+<p>If the 2025 release follows the same naming and layout as 2022 —
+which is the common case — this just works: the generic mask finds
+<code>chs2025ecl_pumf.csv</code>, the BSW join is wired the same way,
+and the metadata is parsed from the command files shipped <em>inside the
+2025 download itself</em> (metadata is always per-version; it is never
+borrowed from a sibling, because variable positions and codes drift
+between cycles).</p>
+<p>Inheritance is deliberately <strong>not</strong> silent and
+<strong>not</strong> a substitute for an explicit entry. Treat the
+message as a prompt to confirm the new release really matches, and to
+add a proper <code>CHS/2025</code> entry once you have. Inheritance is
+skipped for multi-part Census versions and for LFS.</p>
+<p>So the first thing to try with any new bare-year release is
+simply:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">get_pumf</span>(<span class="st">&quot;CHS&quot;</span>, <span class="st">&quot;2025&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>tbl <span class="sc">|&gt;</span> <span class="fu">label_pumf_columns</span>() <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span> <span class="fu">collect</span>()</span></code></pre></div>
+<p>If the columns look right and the labels resolve, you are done — go
+to <a href="#promote">section 4</a> to make it permanent.</p>
+<hr />
+</div>
+<div id="when-the-automatic-import-fails" class="section level2">
+<h2>When the automatic import fails</h2>
+<p>If <code>get_pumf()</code> errors, picks the wrong file, leaves
+columns unlabeled, or the weights do not join, stop and work the problem
+in stages. The golden rule is to <strong>get the metadata parsing right
+before building the full table</strong>. Parsing is cheap and
+idempotent; building scans the whole data file.</p>
+<div id="see-what-is-actually-in-the-directory" class="section level3">
+<h3>See what is actually in the directory</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>vdir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">getOption</span>(<span class="st">&quot;canpumf.cache_path&quot;</span>), <span class="st">&quot;NEWSURVEY&quot;</span>, <span class="st">&quot;2025&quot;</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">list.files</span>(vdir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>Look for: the data file (<code>.txt</code>/<code>.dat</code> for
+fixed-width, <code>.csv</code> for delimited), the command/codebook
+files that describe it (<code>.sps</code>, <code>.sas</code>,
+<code>.lay</code>/<code>.lbe</code>, <code>*codebook.csv</code>,
+<code>*Dictionary.pdf</code>, <code>.sav</code>), and any
+bootstrap-weight file (often <code>*bsw*</code>). The names tell you
+which parser will fire and what <code>file_mask</code> needs to
+select.</p>
+</div>
+<div id="parse-the-metadata-in-isolation" class="section level3">
+<h3>Parse the metadata in isolation</h3>
+<p><code>pumf_metadata()</code> runs only the locate + parse stages and
+returns the canonical metadata (<code>variables</code>,
+<code>codes</code>, <code>layout</code>) without building the DuckDB
+table. This is your fast feedback loop:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">pumf_metadata</span>(<span class="st">&quot;NEWSURVEY&quot;</span>, <span class="st">&quot;2025&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="fu">str</span>(meta<span class="sc">$</span>variables)   <span class="co"># one row per variable: name, label_en, label_fr, type, ...</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">str</span>(meta<span class="sc">$</span>codes)       <span class="co"># one row per code value: name, val, label_en, label_fr</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="fu">str</span>(meta<span class="sc">$</span>layout)      <span class="co"># fixed-width column ranges (absent for CSV data)</span></span></code></pre></div>
+<p>Good signs: every data column appears in <code>variables</code>;
+categorical variables have rows in <code>codes</code>; for fixed-width
+data, <code>layout</code> has sensible
+<code>start</code>/<code>end</code> positions. Common problems and the
+registry field that fixes each:</p>
+<ul>
+<li><strong>Wrong file chosen / “no data file found”</strong> → set
+<code>file_mask</code>.</li>
+<li><strong>Several command files, parser picks the wrong one</strong> →
+set <code>layout_mask</code> to disambiguate the SPSS/SAS files.</li>
+<li><strong>Garbled accents in French labels / read errors</strong> →
+set <code>metadata_encoding</code> (default <code>&quot;CP1252&quot;</code>; older
+DOS-era files sometimes need <code>&quot;CP850&quot;</code>, some recent ones
+<code>&quot;UTF-8&quot;</code>).</li>
+<li><strong>Labels missing entirely</strong> (DATA LIST-only SPSS) →
+supply a <code>*Dictionary.pdf</code> in the directory so the PDF parser
+can fill them in.</li>
+</ul>
+</div>
+<div id="start-from-an-existing-entry-as-a-template" class="section level3">
+<h3>Start from an existing entry as a template</h3>
+<p>You rarely start from a blank slate. Inspect a related entry — an
+earlier year of the same survey, or a different survey with the same
+file format — and use it as the starting point:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">pumf_registry</span>(<span class="st">&quot;CHS&quot;</span>, <span class="st">&quot;2022&quot;</span>)   <span class="co"># inspect a known entry</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">list_pumf_registry</span>()           <span class="co"># see everything that is registered</span></span></code></pre></div>
+<p>Build a candidate configuration with
+<code>pumf_registry_entry()</code>. Only the fields you supply are
+recorded; the rest fall back to pipeline defaults. You pass it to
+<code>pumf_metadata()</code> / <code>get_pumf()</code> via the
+<code>registry =</code> argument <strong>without touching
+<code>R/registry.R</code></strong> — perfect for iterating:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>entry <span class="ot">&lt;-</span> <span class="fu">pumf_registry_entry</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">file_mask     =</span> <span class="st">&quot;PUMF_NEWSURVEY_</span><span class="sc">\\</span><span class="st">d{4}</span><span class="sc">\\</span><span class="st">.txt&quot;</span>,  <span class="co"># generic year from the start</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">bsw_file_mask =</span> <span class="st">&quot;bsw_flatfile</span><span class="sc">\\</span><span class="st">.txt&quot;</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">bsw_join_key  =</span> <span class="st">&quot;CASEID&quot;</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co"># Re-parse with the candidate config until the metadata looks right:</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">pumf_metadata</span>(<span class="st">&quot;NEWSURVEY&quot;</span>, <span class="st">&quot;2025&quot;</span>, <span class="at">registry =</span> entry, <span class="at">refresh =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>Note <code>refresh = TRUE</code>: parsing is idempotent, so once
+<code>metadata/</code> exists a new <code>registry</code> has no effect
+until you force a re-parse.</p>
+<p>If you are adapting a survey whose format matches an existing one,
+literally copy that survey’s entry fields into
+<code>pumf_registry_entry()</code> and adjust the masks. This is exactly
+how a new CHS year reuses the CHS/2022 shape, and how a new survey might
+start from the configuration of an existing one that shares its file
+format.</p>
+</div>
+<div id="tweak-fixups-for-data-level-issues" class="section level3">
+<h3>Tweak fixups for data-level issues</h3>
+<p>Once the structure parses, the build stage may still need
+per-variable adjustments. These go in <code>data_fixups</code> (see
+<code>?pumf_registry_entry</code> for the full list):</p>
+<ul>
+<li><code>force_numeric</code> — a continuous variable carrying
+top-code/boundary labels; drops the spurious codes but first converts
+true-missing sentinels to an <code>NA</code> range.</li>
+<li><code>force_character</code> / <code>force_integer</code> /
+<code>force_bigint</code> — override the DuckDB storage type so
+geographic codes keep leading zeros, or out-of-range IDs are not
+truncated.</li>
+<li><code>na_values</code> — raw string values that should become
+<code>NA</code> across all columns (undeclared sentinels, SAS-style
+<code>&quot;.&quot;</code>).</li>
+<li><code>codes_supplement</code> / <code>missing_supplement</code> —
+inject code rows or missing ranges that the command files omit.</li>
+</ul>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>entry <span class="ot">&lt;-</span> <span class="fu">pumf_registry_entry</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">file_mask   =</span> <span class="st">&quot;PUMF_NEWSURVEY_</span><span class="sc">\\</span><span class="st">d{4}</span><span class="sc">\\</span><span class="st">.txt&quot;</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">data_fixups =</span> <span class="fu">list</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    <span class="at">force_numeric  =</span> <span class="st">&quot;INCOME&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    <span class="at">force_character =</span> <span class="st">&quot;GEOCODE&quot;</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  )</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="build-the-full-table" class="section level3">
+<h3>Build the full table</h3>
+<p>When the metadata is clean and the fixups are in place, do the full
+build:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">get_pumf</span>(<span class="st">&quot;NEWSURVEY&quot;</span>, <span class="st">&quot;2025&quot;</span>, <span class="at">registry =</span> entry, <span class="at">refresh =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>tbl <span class="sc">|&gt;</span> <span class="fu">label_pumf_columns</span>() <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span> <span class="fu">collect</span>()   <span class="co"># spot-check labels</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>tbl <span class="sc">|&gt;</span> <span class="fu">count</span>() <span class="sc">|&gt;</span> <span class="fu">collect</span>()                           <span class="co"># row count sanity check</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="fu">bsw_info</span>(tbl)                                         <span class="co"># confirm weights joined</span></span></code></pre></div>
+<p>Verify a few known values against the official documentation: a
+categorical variable’s levels, a continuous variable’s range, the total
+row count, and that the bootstrap weights are present and join 1:1.</p>
+<hr />
+</div>
+</div>
+<div id="promote" class="section level2">
+<h2>Promote the configuration into the registry</h2>
+<p>A <code>registry =</code> patch only lasts for the session. Once it
+works, make it permanent by cloning the <strong>canpumf</strong> repo,
+adding an entry to <code>R/registry.R</code> so plain
+<code>get_pumf(&quot;NEWSURVEY&quot;, &quot;2025&quot;)</code> works for everyone and making
+a pull request to merge this into the official package:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># In R/registry.R, inside the .pumf_registry list:</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>newsurvey<span class="fl">.2025</span>  <span class="ot">=</span> <span class="fu">.make_entry</span>(<span class="st">&quot;NEWSURVEY&quot;</span>, <span class="st">&quot;2025&quot;</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="at">file_mask     =</span> <span class="st">&quot;PUMF_NEWSURVEY_</span><span class="sc">\\</span><span class="st">d{4}</span><span class="sc">\\</span><span class="st">.txt&quot;</span>,   <span class="co"># keep the generic year</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="at">bsw_file_mask =</span> <span class="st">&quot;bsw_flatfile</span><span class="sc">\\</span><span class="st">.txt&quot;</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="at">bsw_join_key  =</span> <span class="st">&quot;CASEID&quot;</span>)</span></code></pre></div>
+<p>Alternatively <a href="https://github.com/mountainMath/canpumf/issues">open an issue</a>
+and document your successful registry modification and the package
+maintainers will add it to the package.</p>
+<p>Use the generic <code>\d{4}</code> year mask so the next release year
+inherits cleanly via the newest-sibling fallback. When you add the
+entry, keep the three sources of truth in sync: the registry, the test
+suite (<code>tests/testthat/</code>,
+<code>tests/TEST_COVERAGE.md</code>), and the README verified-datasets
+table.</p>
+<p>Finally, <strong>every manual override must be verified against the
+survey’s official documentation and recorded</strong> in
+<code>tests/testthat/override_verification.csv</code>. The
+<code>test-override-verification.R</code> test fails if an override is
+missing from the ledger or marked
+<code>pending</code>/<code>mismatch</code>. The workflow for confirming
+overrides against the PDF codebook is described in the package’s
+<code>CLAUDE.md</code> and driven by
+<code>tools/verify_overrides.R</code>.</p>
+<hr />
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<ul>
+<li>Put the PUMF at
+<code>&lt;cache_path&gt;/&lt;series&gt;/&lt;version&gt;/</code>, using
+the survey acronym and a bare four-digit year.</li>
+<li>Try <code>get_pumf(series, version)</code> first — generic year
+masks plus newest-sibling inheritance often handle a new year with no
+code change (watch for the inheritance message).</li>
+<li>If it fails, iterate with
+<code>pumf_metadata(..., registry = pumf_registry_entry(...))</code>
+starting from a related entry, fixing the parse before building.</li>
+<li>Build with <code>get_pumf(..., registry = ...)</code>, spot-check
+labels/rows/weights.</li>
+<li>Promote the working config into <code>R/registry.R</code>, sync
+tests + README, and record any overrides in the verification
+ledger.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

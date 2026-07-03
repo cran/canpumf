@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Working with multi-module PUMF surveys</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Working with multi-module PUMF surveys</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(canpumf)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">options</span>(<span class="at">canpumf.cache_path =</span> <span class="fu">Sys.getenv</span>(<span class="st">&quot;COMPILE_VIG_CANPUMF&quot;</span>))</span></code></pre></div>
+<p>Some Statistics Canada PUMF surveys ship <strong>several linked data
+files</strong> rather than one. Each file is a different unit of
+analysis that shares a common respondent key, and the files are meant to
+be joined for analysis. Examples include:</p>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Survey</th>
+<th>Modules</th>
+<th>Join key</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GSS cycle 16 — Aging and Social Support (2002)</td>
+<td><code>MAIN</code> + <code>CG4</code> + <code>CG6</code> +
+<code>CR</code></td>
+<td><code>RECID</code></td>
+</tr>
+<tr class="even">
+<td>GSS — Time Use (1998, 2010, 2015, 2022)</td>
+<td><code>Main</code> + <code>Episode</code></td>
+<td><code>RECID</code> / <code>PUMFID</code></td>
+</tr>
+<tr class="odd">
+<td>Survey of Household Spending (2017)</td>
+<td><code>Interview</code> + <code>Diary</code></td>
+<td><code>CASEID</code></td>
+</tr>
+<tr class="even">
+<td>Giving, Volunteering and Participating (1997–2010)</td>
+<td><code>MAIN</code> + <code>GS</code> / <code>VD</code> /
+<code>GIVE</code> / <code>VOLNTR</code></td>
+<td><code>PUMFID</code> / <code>MICRO_ID</code> /
+<code>IDNUM</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>canpumf</code> models these as <strong>several tables inside
+one DuckDB file</strong>, so the modules can be joined on a single
+connection. <code>get_pumf()</code> always returns the survey’s
+<strong>primary module</strong> (the respondent-level file that carries
+the survey weight), and tells you which sibling modules are
+available.</p>
+<div id="loading-the-primary-module" class="section level2">
+<h2>Loading the primary module</h2>
+<p><code>get_pumf()</code> returns the main file as usual. For a
+multi-module survey it also emits a one-time message listing the other
+modules and how to open one:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>main <span class="ot">&lt;-</span> <span class="fu">get_pumf</span>(<span class="st">&quot;GSS&quot;</span>, <span class="st">&quot;Cycle 16 (2002)&quot;</span>)  <span class="co"># primary module (MAIN), carries WGHT_PER</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; GSS/Cycle 16 (2002) is a multi-module survey; you loaded the primary module. Other linked modules: CG4, CG6, CR.</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; Open one on the same connection with pumf_module(), e.g.:</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt;   cg4 &lt;- pumf_module(main, &quot;CG4&quot;)</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; GSS/Cycle 16 (2002) is a multi-module survey; you loaded the primary module. Other linked modules: CG4, CG6, CR.</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; Open one on the same connection with pumf_module(), e.g.:</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;   cg4 &lt;- pumf_module(main, &quot;CG4&quot;)</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>main <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; # A query:  ?? x 5</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; # Database: DuckDB 1.5.4 [root@Darwin 25.5.0:R 4.6.0//Users/jens/data/pumf.data/GSS/Cycle 16 (2002)/GSS_Cycle_16__2002_.duckdb]</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;   RECID WGHT_PER AGE_2001_GR5      AGE_2001_GR10     SEX   </span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;             &lt;fct&gt;             &lt;fct&gt; </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; 1     1     367. 45 to 49          45 to 54          Female</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; 2     2     234. 65 to 69          65 to 74          Male  </span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; 3     3     142. 80 years and over 75 years and over Male  </span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; 4     4     500. 45 to 49          45 to 54          Male  </span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; 5     5     828. 55 to 59          55 to 64          Male  </span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; 6     6     762. 45 to 49          45 to 54          Female</span></span></code></pre></div>
+<p>Everything you already know about <code>get_pumf()</code> output
+applies to the primary module: values come pre-labelled,
+<code>label_pumf_columns()</code> renames columns to their
+human-readable labels, and <code>dplyr::collect()</code> pulls a local
+tibble.</p>
+</div>
+<div id="opening-a-sibling-module" class="section level2">
+<h2>Opening a sibling module</h2>
+<p>Use <code>pumf_module()</code> to open another module. Crucially, it
+opens on the <strong>same DuckDB connection</strong> as
+<code>main</code>, so the two tbls are joinable without a second
+connection. The first time you open a module for a survey,
+<code>canpumf</code> reminds you of the key the modules join on:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>cg4 <span class="ot">&lt;-</span> <span class="fu">pumf_module</span>(main, <span class="st">&quot;CG4&quot;</span>)   <span class="co"># the caregiving module</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; GSS/Cycle 16 (2002) modules join on &#39;RECID&#39; (e.g. dplyr::inner_join(main, CG4, by = &quot;RECID&quot;)).</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; GSS/2002 modules join on &#39;RECID&#39; (e.g. dplyr::inner_join(main, CG4, by = &quot;RECID&quot;)).</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>cg4 <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; # A query:  ?? x 5</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; # Database: DuckDB 1.5.4 [root@Darwin 25.5.0:R 4.6.0//Users/jens/data/pumf.data/GSS/Cycle 16 (2002)/GSS_Cycle_16__2002_.duckdb]</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;   RECID PERSONID CG4_FR_Q100_C                           CG4_FR_Q104 CG4_FR_Q105</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;                                   &lt;fct&gt;       &lt;fct&gt;      </span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; 1     6        1 Neighbour of respondent                 Not asked   Not asked  </span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 2     7        1 Father of respondent                    No          Not asked  </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 3    10        1 Aunt of respondent                      Not asked   Not asked  </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 4    14        1 Close friend of respondent              Not asked   Not asked  </span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 5    14        2 Co-worker of respondent and Other rela… Not asked   Not asked  </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 6    14        3 Co-worker of respondent and Other rela… Not asked   Not asked</span></span></code></pre></div>
+</div>
+<div id="joining-modules-for-analysis" class="section level2">
+<h2>Joining modules for analysis</h2>
+<p>Because both tbls share one connection, the join runs entirely inside
+DuckDB — nothing is pulled into R until you <code>collect()</code>. The
+respondent-level survey weight lives only on the primary module, so a
+typical pattern is to join the detail module to the columns you need
+from <code>main</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>joined <span class="ot">&lt;-</span> cg4 <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="fu">inner_join</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    main <span class="sc">|&gt;</span> <span class="fu">select</span>(RECID, WGHT_PER),</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="at">by =</span> <span class="st">&quot;RECID&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  )</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>joined <span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">weighted_n =</span> <span class="fu">sum</span>(WGHT_PER, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="fu">collect</span>()</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 1</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;   weighted_n</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;        &lt;dbl&gt;</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 1   9045983.</span></span></code></pre></div>
+<p>The detail modules typically have a different row count than the
+primary module — for example a caregiving or time-use episode module has
+one row per episode rather than one row per respondent — so use the join
+direction that fits your unit of analysis. But specific requirements may
+vary by use case, and an inner join might not always be the right
+choice. This decision is thus left to the user.</p>
+</div>
+<div id="a-second-example-the-survey-of-household-spending" class="section level2">
+<h2>A second example: the Survey of Household Spending</h2>
+<p>The 2017 SHS pairs an <code>Interview</code> file (one row per
+household) with a <code>Diary</code> file (one row per recorded
+purchase), joined on <code>CASEID</code>. Each module ships its own
+bootstrap-weight set, so replicate weights stay attached to the correct
+unit of analysis:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>shs   <span class="ot">&lt;-</span> <span class="fu">get_pumf</span>(<span class="st">&quot;SHS&quot;</span>, <span class="st">&quot;2017&quot;</span>)          <span class="co"># Interview (primary)</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; SHS/2017 is a multi-module survey; you loaded the primary module. Other linked modules: Diary.</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; Open one on the same connection with pumf_module(), e.g.:</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;   diary &lt;- pumf_module(main, &quot;Diary&quot;)</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>diary <span class="ot">&lt;-</span> <span class="fu">pumf_module</span>(shs, <span class="st">&quot;Diary&quot;</span>)        <span class="co"># one row per purchase, same connection</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; SHS/2017 modules join on &#39;CASEID&#39; (e.g. dplyr::inner_join(main, Diary, by = &quot;CASEID&quot;)).</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>diary <span class="sc">|&gt;</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="fu">inner_join</span>(shs <span class="sc">|&gt;</span> <span class="fu">select</span>(CASEID), <span class="at">by =</span> <span class="st">&quot;CASEID&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="fu">tally</span>() <span class="sc">|&gt;</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="fu">collect</span>()</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 1</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;       n</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt;</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; 1  4012</span></span></code></pre></div>
+</div>
+<div id="cleaning-up" class="section level2">
+<h2>Cleaning up</h2>
+<p>All modules opened from one <code>get_pumf()</code> call share a
+single connection, so a single <code>close_pumf()</code> on any of the
+tbls releases it:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">close_pumf</span>(main)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">close_pumf</span>(shs)</span></code></pre></div>
+</div>
+<div id="database-connections" class="section level2">
+<h2>Database connections</h2>
+<p>Alternatively the same functionality can be achieved by opening a
+general database connection that does not immediately select tables, and
+then manually select appropriate subtables:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>con<span class="ot">&lt;-</span><span class="fu">get_pumf_connection</span>(<span class="st">&quot;SHS&quot;</span>, <span class="st">&quot;2017&quot;</span>) </span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; Connected to DuckDB (read-write). Available tables: eng_Diary, eng_Interview.</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; Disconnect with DBI::dbDisconnect(con, shutdown = TRUE) when done.</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbListTables</span>(con)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; [1] &quot;eng_Diary&quot;     &quot;eng_Interview&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">close_pumf</span>(con)</span></code></pre></div>
+</div>
+<div id="notes" class="section level2">
+<h2>Notes</h2>
+<ul>
+<li><code>get_pumf(&quot;GSS&quot;, &quot;2002&quot;, module = &quot;CG4&quot;)</code> opens a module
+<strong>standalone</strong> (its own connection). Prefer
+<code>pumf_module()</code> when you intend to join, so both tbls share
+one connection.</li>
+<li>The join key is recorded in the survey registry and surfaced in the
+messages above, so you never have to guess it — it varies across surveys
+(<code>RECID</code>, <code>PUMFID</code>, <code>MICRO_ID</code>,
+<code>CASEID</code>, <code>IDNUM</code>).</li>
+<li><code>label_pumf_columns()</code> and <code>pumf_var_labels()</code>
+are module-aware: each module is labelled from its own metadata even
+though all modules share one connection.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,467 @@
+# Tests for add_bootstrap_weights(), remove_bootstrap_weights(), bsw_info(),
+# pumf_var_labels(), list_canpumf_collection(), list_available_lfs_pumf_versions().
+
+.bsw_cache <- function() getOption("canpumf.cache_path", "")
+
+# Reuse the minimal e2e fixture from test-api.R so we can build a real DuckDB.
+.make_bsw_dir <- function(tmp) {
+  vdir     <- file.path(tmp, "FAKE", "2099")
+  meta_dir <- file.path(vdir, "metadata")
+  dir.create(meta_dir, recursive = TRUE)
+  vars <- tibble::tibble(
+    name = c("ID", "WEIGHT"),
+    label_en = c("Record ID", "Survey weight"),
+    label_fr = c("Identifiant", "Poids"),
+    type = c("numeric", "numeric"),
+    decimals = c(0L, 0L),
+    missing_low = c(NA_real_, NA_real_),
+    missing_high = c(NA_real_, NA_real_)
+  )
+  readr::write_csv(vars, file.path(meta_dir, "variables.csv"))
+  readr::write_csv(
+    tibble::tibble(name = character(), val = character(),
+                   label_en = character(), label_fr = character()),
+    file.path(meta_dir, "codes.csv")
+  )
+  readr::write_csv(
+    tibble::tibble(ID = as.character(1:20), WEIGHT = as.character(rep(100L, 20))),
+    file.path(vdir, "survey.csv")
+  )
+  writeLines("", file.path(vdir, "sentinel.txt"))
+  vdir
+}
+
+# Build a DuckDB-backed survey table directly (with an optional strata column)
+# and return a handle; used by the row-addition regeneration tests, which need
+# to append rows to the physical table between add_bootstrap_weights() calls.
+.bsw_db <- function(df, env = parent.frame()) {
+  cache   <- withr::local_tempdir(.local_envir = env)
+  s <- list(cache = cache, series = "ROWT", version = "2020", lang = "eng")
+  s$db_path <- .pumf_db_path(s$series, s$version, cache)
+  dir.create(dirname(s$db_path), recursive = TRUE, showWarnings = FALSE)
+  s$tname <- .pumf_table_name(s$series, s$version, s$lang)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = s$db_path)
+  DBI::dbWriteTable(con, s$tname, df)
+  DBI::dbDisconnect(con, shutdown = TRUE)
+  s
+}
+.bsw_open <- function(s) {
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = s$db_path, read_only = TRUE)
+  t   <- dplyr::tbl(con, s$tname)
+  .pumf_register_con(con, s$series, s$version, s$cache, s$lang)
+  t
+}
+.bsw_append <- function(s, df) {
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = s$db_path)
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  DBI::dbWriteTable(con, s$tname, df, append = TRUE)
+}
+.bsw_read <- function(s) {
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = s$db_path, read_only = TRUE)
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  DBI::dbGetQuery(con, 'SELECT * FROM "pumf_bsw_wt" ORDER BY "ID"')
+}
+
+
+# ============================================================
+# add_bootstrap_weights() — in-memory path
+# ============================================================
+
+test_that("add_bootstrap_weights (in-memory): appends BSW columns", {
+  df <- tibble::tibble(ID = 1:10, WEIGHT = rep(100, 10), X = letters[1:10])
+  result <- add_bootstrap_weights(df, weight_col = "WEIGHT",
+                                  n_replicates = 8L, seed = 42L)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 10L)
+  bsw_cols <- grep("^CPBSW",names(result), value = TRUE)
+  expect_length(bsw_cols, 8L)
+  expect_true(all(sapply(result[bsw_cols], is.numeric)))
+})
+
+test_that("add_bootstrap_weights (in-memory): custom prefix", {
+  df     <- tibble::tibble(W = c(1, 2, 3))
+  result <- add_bootstrap_weights(df, weight_col = "W",
+                                  n_replicates = 4L, prefix = "REP", seed = 1L)
+  expect_true(all(paste0("REP", 1:4) %in% names(result)))
+})
+
+test_that("add_bootstrap_weights (in-memory): NA weights replaced with 0", {
+  df <- tibble::tibble(W = c(1, NA, 3))
+  expect_warning(
+    result <- add_bootstrap_weights(df, weight_col = "W",
+                                    n_replicates = 4L, seed = 1L),
+    regexp = "NA weight"
+  )
+  bsw_cols <- grep("^CPBSW",names(result), value = TRUE)
+  expect_true(all(!is.na(result[bsw_cols])))
+})
+
+test_that("add_bootstrap_weights (in-memory): seed gives reproducible results", {
+  df <- tibble::tibble(W = 1:5)
+  r1 <- add_bootstrap_weights(df, "W", n_replicates = 4L, seed = 99L)
+  r2 <- add_bootstrap_weights(df, "W", n_replicates = 4L, seed = 99L)
+  expect_equal(r1, r2)
+})
+
+test_that("add_bootstrap_weights (in-memory): re-run extends without duplicating columns", {
+  df <- tibble::tibble(ID = 1:10, WEIGHT = rep(100, 10))
+  r1 <- add_bootstrap_weights(df, "WEIGHT", n_replicates = 4L, seed = 1L)
+  expect_length(grep("^CPBSW", names(r1), value = TRUE), 4L)
+
+  # Requesting more replicates must extend the existing set (CPBSW5..CPBSW8),
+  # not regenerate CPBSW1..CPBSW8 and duplicate the column names.
+  r2 <- suppressMessages(
+    add_bootstrap_weights(r1, "WEIGHT", n_replicates = 8L, seed = 1L))
+  bsw_cols <- grep("^CPBSW", names(r2), value = TRUE)
+  expect_length(bsw_cols, 8L)
+  expect_false(anyDuplicated(names(r2)) > 0L)
+  expect_setequal(bsw_cols, paste0("CPBSW", 1:8))
+  # The original replicate columns are preserved unchanged.
+  expect_equal(r2[paste0("CPBSW", 1:4)], r1[paste0("CPBSW", 1:4)])
+})
+
+test_that("add_bootstrap_weights (in-memory): re-run reuses when enough replicates exist", {
+  df <- tibble::tibble(ID = 1:10, WEIGHT = rep(100, 10))
+  r1 <- add_bootstrap_weights(df, "WEIGHT", n_replicates = 8L, seed = 1L)
+  r2 <- suppressMessages(
+    add_bootstrap_weights(r1, "WEIGHT", n_replicates = 5L, seed = 1L))
+  # No regeneration, no new columns, no duplicates.
+  expect_identical(names(r2), names(r1))
+  expect_equal(r2, r1)
+})
+
+test_that("add_bootstrap_weights (in-memory): stratified resamples within strata", {
+  # Constant weights => within-stratum total of each replicate column equals
+  # (weight * stratum size) iff resampling stayed inside the stratum.
+  df <- tibble::tibble(ID = 1:10, WT = rep(100, 10), G = rep(c("A", "B"), each = 5))
+  out <- as.data.frame(
+    add_bootstrap_weights(df, "WT", strata_cols = "G", n_replicates = 4L, seed = 1L))
+  repcols <- paste0("CPBSW", 1:4)
+  sumA <- vapply(repcols, function(c) sum(out[out$ID <= 5L, c]), numeric(1))
+  sumB <- vapply(repcols, function(c) sum(out[out$ID >= 6L, c]), numeric(1))
+  expect_true(all(sumA == 500))   # 100 * 5
+  expect_true(all(sumB == 500))
+})
+
+
+# ============================================================
+# add_bootstrap_weights() + remove_bootstrap_weights() + bsw_info()
+# — DuckDB path (uses the minimal fixture)
+# ============================================================
+
+test_that("add_bootstrap_weights (DuckDB): creates BSW table and view", {
+  tmp <- withr::local_tempdir()
+  .make_bsw_dir(tmp)
+  tbl <- suppressMessages(get_pumf("FAKE", "2099", cache_path = tmp))
+  on.exit(try(close_pumf(tbl), silent = TRUE))
+
+  result <- add_bootstrap_weights(tbl, weight_col = "WEIGHT",
+                                  n_replicates = 16L, seed = 7L)
+  on.exit(try(close_pumf(result), silent = TRUE), add = TRUE)
+
+  # Returns a lazy tbl with BSW columns
+  cn <- colnames(result)
+  bsw_cols <- grep("^CPBSW",cn, value = TRUE)
+  expect_length(bsw_cols, 16L)
+})
+
+test_that("add_bootstrap_weights (DuckDB): re-run with custom prefix keeps coded columns", {
+  tmp <- withr::local_tempdir()
+  .make_bsw_dir(tmp)
+  tbl <- suppressMessages(get_pumf("FAKE", "2099", cache_path = tmp))
+
+  # First pass: coded input → coded output plus REP1..REP4 replicate columns.
+  t1 <- suppressMessages(add_bootstrap_weights(
+    tbl, weight_col = "WEIGHT", n_replicates = 4L, prefix = "REP", seed = 1L))
+
+  # Re-running on the augmented (still coded) tbl must not mistake the
+  # custom-prefix replicate columns for label aliases and relabel the output.
+  t2 <- suppressMessages(add_bootstrap_weights(
+    t1, weight_col = "WEIGHT", n_replicates = 4L, prefix = "REP", seed = 1L))
+  on.exit(try(close_pumf(t2), silent = TRUE))
+
+  cn <- colnames(t2)
+  expect_true(all(c("ID", "WEIGHT") %in% cn))   # coded names preserved
+  expect_false("Survey weight" %in% cn)          # not spuriously relabeled
+  expect_false("Record ID" %in% cn)
+})
+
+test_that("add_bootstrap_weights (DuckDB): added rows regenerate all weights (unstratified)", {
+  set.seed(0)
+  s  <- .bsw_db(data.frame(ID = 1:8, WT = runif(8, 100, 200)))
+  r1 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 3L, seed = 1L))
+  close_pumf(r1)
+  before <- .bsw_read(s)
+  expect_equal(nrow(before), 8L)
+
+  # Append 4 rows, then re-add: every replicate weight must be regenerated
+  # because the whole resampling population changed.
+  .bsw_append(s, data.frame(ID = 9:12, WT = runif(4, 100, 200)))
+  r2 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 3L, seed = 1L))
+  close_pumf(r2)
+  after <- .bsw_read(s)
+
+  expect_equal(nrow(after), 12L)
+  expect_setequal(after$ID, 1:12)
+  expect_false("CPBSW4" %in% names(after))      # still 3 replicates, no new cols
+  # Pre-existing rows were regenerated, not carried over unchanged.
+  expect_false(isTRUE(all.equal(before[before$ID <= 8L, -1L],
+                                after[after$ID <= 8L, -1L])))
+})
+
+test_that("add_bootstrap_weights (DuckDB): added rows regenerate only affected strata", {
+  set.seed(0)
+  s  <- .bsw_db(data.frame(ID = 1:10, WT = runif(10, 100, 200),
+                           G = rep(c("A", "B"), each = 5)))
+  r1 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", strata_cols = "G",
+    n_replicates = 3L, seed = 1L))
+  close_pumf(r1)
+  before <- .bsw_read(s)
+
+  # New rows only in stratum B: stratum A must be left untouched.
+  .bsw_append(s, data.frame(ID = 11:12, WT = runif(2, 100, 200), G = c("B", "B")))
+  r2 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", strata_cols = "G",
+    n_replicates = 3L, seed = 1L))
+  close_pumf(r2)
+  after <- .bsw_read(s)
+
+  expect_equal(nrow(after), 12L)
+  expect_true(all(11:12 %in% after$ID))
+  # Stratum A (ID 1-5): weights preserved bit-for-bit.
+  expect_equal(after[after$ID <= 5L, ], before[before$ID <= 5L, ],
+               ignore_attr = TRUE)
+  # Stratum B (ID 6-10): pre-existing rows regenerated.
+  expect_false(isTRUE(all.equal(before[before$ID %in% 6:10, -1L],
+                                after[after$ID %in% 6:10, -1L])))
+})
+
+test_that("add_bootstrap_weights (DuckDB): reuses stored weights when nothing changed", {
+  set.seed(0)
+  s  <- .bsw_db(data.frame(ID = 1:8, WT = runif(8, 100, 200)))
+  r1 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 4L, seed = 1L))
+  close_pumf(r1)
+  before <- .bsw_read(s)
+
+  # Same request, deliberately different seed: if anything were recomputed the
+  # stored values would change.  Case A reuses, so they must be identical.
+  r2 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 4L, seed = 999L))
+  expect_length(grep("^CPBSW", colnames(r2), value = TRUE), 4L)
+  close_pumf(r2)
+  expect_equal(.bsw_read(s), before)
+
+  # Requesting fewer replicates returns a subset view but does not shrink the
+  # stored table.
+  r3 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 2L, seed = 1L))
+  expect_length(grep("^CPBSW", colnames(r3), value = TRUE), 2L)
+  close_pumf(r3)
+  expect_equal(ncol(.bsw_read(s)), 5L)   # ID + CPBSW1..4 still stored
+})
+
+test_that("add_bootstrap_weights (DuckDB): adding replicates keeps existing columns unchanged", {
+  set.seed(0)
+  s  <- .bsw_db(data.frame(ID = 1:8, WT = runif(8, 100, 200)))
+  r1 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 3L, seed = 1L))
+  close_pumf(r1)
+  before <- .bsw_read(s)
+
+  r2 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 6L, seed = 1L))
+  close_pumf(r2)
+  after <- .bsw_read(s)
+
+  expect_equal(nrow(after), 8L)
+  expect_true(all(paste0("CPBSW", 1:6) %in% names(after)))
+  expect_false("CPBSW7" %in% names(after))
+  # The original three replicate columns are preserved bit-for-bit.
+  expect_equal(after[, paste0("CPBSW", 1:3)], before[, paste0("CPBSW", 1:3)],
+               ignore_attr = TRUE)
+})
+
+test_that("add_bootstrap_weights (DuckDB): added replicate columns resample within strata", {
+  # Constant weights: each replicate column's within-stratum total equals
+  # (weight * stratum size) only if resampling stayed inside the stratum.  This
+  # guards the regression where adding columns resampled the whole population.
+  s  <- .bsw_db(data.frame(ID = 1:10, WT = rep(100, 10), G = rep(c("A", "B"), each = 5)))
+  r1 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", strata_cols = "G", n_replicates = 2L, seed = 1L))
+  close_pumf(r1)
+  r2 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", strata_cols = "G", n_replicates = 5L, seed = 1L))
+  close_pumf(r2)
+  after <- .bsw_read(s)
+
+  repcols <- paste0("CPBSW", 1:5)
+  sumA <- vapply(repcols, function(c) sum(after[after$ID <= 5L, c]), numeric(1))
+  sumB <- vapply(repcols, function(c) sum(after[after$ID >= 6L, c]), numeric(1))
+  expect_true(all(sumA == 500))   # 100 * 5, every column including the added 3-5
+  expect_true(all(sumB == 500))
+})
+
+test_that("add_bootstrap_weights (DuckDB): added rows + more columns, stratified", {
+  set.seed(0)
+  s  <- .bsw_db(data.frame(ID = 1:10, WT = runif(10, 100, 200),
+                           G = rep(c("A", "B"), each = 5)))
+  r1 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", strata_cols = "G", n_replicates = 3L, seed = 1L))
+  close_pumf(r1)
+  before <- .bsw_read(s)
+
+  .bsw_append(s, data.frame(ID = 11:12, WT = runif(2, 100, 200), G = c("B", "B")))
+  r2 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", strata_cols = "G", n_replicates = 5L, seed = 1L))
+  close_pumf(r2)
+  after <- .bsw_read(s)
+
+  expect_equal(nrow(after), 12L)
+  expect_true(all(paste0("CPBSW", 1:5) %in% names(after)))
+  expect_false(anyNA(after[, -1L]))
+  # Unaffected stratum A keeps its first three replicates; columns 4-5 added.
+  expect_equal(after[after$ID <= 5L, paste0("CPBSW", 1:3)],
+               before[before$ID <= 5L, paste0("CPBSW", 1:3)], ignore_attr = TRUE)
+})
+
+test_that("add_bootstrap_weights (DuckDB): overwrite=TRUE regenerates from scratch", {
+  set.seed(0)
+  s  <- .bsw_db(data.frame(ID = 1:8, WT = runif(8, 100, 200)))
+  r1 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 4L, seed = 1L))
+  close_pumf(r1)
+  before <- .bsw_read(s)
+
+  # Same seed + same data => identical regeneration.
+  r2 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 4L, seed = 1L, overwrite = TRUE))
+  close_pumf(r2)
+  expect_equal(.bsw_read(s), before)
+
+  # Different seed => different weights (proves it recomputed, not reused).
+  r3 <- suppressMessages(add_bootstrap_weights(
+    .bsw_open(s), "WT", id_col = "ID", n_replicates = 4L, seed = 2L, overwrite = TRUE))
+  close_pumf(r3)
+  expect_false(isTRUE(all.equal(.bsw_read(s)[, -1L], before[, -1L])))
+})
+
+test_that("bsw_info: reports BSW tables after add_bootstrap_weights", {
+  tmp <- withr::local_tempdir()
+  .make_bsw_dir(tmp)
+  tbl    <- suppressMessages(get_pumf("FAKE", "2099", cache_path = tmp))
+  result <- add_bootstrap_weights(tbl, weight_col = "WEIGHT",
+                                  n_replicates = 8L, seed = 3L)
+  on.exit(try(close_pumf(result), silent = TRUE))
+
+  info <- bsw_info(result)
+  expect_s3_class(info, "tbl_df")
+  expect_equal(nrow(info), 1L)
+  expect_equal(info$n_replicates, 8L)
+  expect_true(info$view_exists)
+})
+
+test_that("bsw_info: returns empty tibble (invisibly) when no BSW present", {
+  tmp <- withr::local_tempdir()
+  .make_bsw_dir(tmp)
+  tbl <- suppressMessages(get_pumf("FAKE", "2099", cache_path = tmp))
+  on.exit(close_pumf(tbl))
+
+  expect_message(info <- bsw_info(tbl), regexp = "No bootstrap")
+  expect_equal(nrow(info), 0L)
+})
+
+test_that("bsw_info: errors on data.frame input", {
+  expect_error(bsw_info(data.frame(x = 1)), regexp = "DuckDB-backed")
+})
+
+test_that("remove_bootstrap_weights: removes BSW and returns clean tbl", {
+  tmp <- withr::local_tempdir()
+  .make_bsw_dir(tmp)
+  tbl    <- suppressMessages(get_pumf("FAKE", "2099", cache_path = tmp))
+  result <- add_bootstrap_weights(tbl, weight_col = "WEIGHT",
+                                  n_replicates = 8L, seed = 5L)
+  cleaned <- remove_bootstrap_weights(result)
+  on.exit(close_pumf(cleaned))
+
+  bsw_cols <- grep("^CPBSW",colnames(cleaned), value = TRUE)
+  expect_length(bsw_cols, 0L)
+  expect_message(bsw_info(cleaned), regexp = "No bootstrap")
+})
+
+test_that("remove_bootstrap_weights: errors on data.frame input", {
+  expect_error(remove_bootstrap_weights(data.frame(x = 1)),
+               regexp = "DuckDB-backed")
+})
+
+
+# ============================================================
+# pumf_var_labels()
+# ============================================================
+
+test_that("pumf_var_labels: errors when tbl has no provenance", {
+  tmp  <- withr::local_tempdir()
+  con  <- DBI::dbConnect(duckdb::duckdb(), dbdir = file.path(tmp, "x.duckdb"))
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  DBI::dbWriteTable(con, "t", data.frame(x = 1L))
+  tbl <- dplyr::tbl(con, "t")
+  expect_error(pumf_var_labels(tbl), regexp = "provenance")
+})
+
+test_that("pumf_var_labels: returns tibble with name/label_en/label_fr columns", {
+  tmp <- withr::local_tempdir()
+  .make_bsw_dir(tmp)
+  tbl <- suppressMessages(get_pumf("FAKE", "2099", cache_path = tmp))
+  on.exit(close_pumf(tbl))
+
+  vl <- pumf_var_labels(tbl)
+  expect_s3_class(vl, "tbl_df")
+  expect_true(all(c("name", "label_en", "label_fr") %in% names(vl)))
+  expect_true("WEIGHT" %in% vl$name)
+  expect_equal(vl$label_en[vl$name == "WEIGHT"], "Survey weight")
+})
+
+
+# ============================================================
+# list_canpumf_collection() and list_available_lfs_pumf_versions()
+# — require network; skip offline
+# ============================================================
+
+test_that("list_canpumf_collection: returns tibble with expected columns", {
+  # Works offline via hardcoded fallback (emits a warning when scraping fails)
+  result <- suppressWarnings(list_canpumf_collection())
+  expect_s3_class(result, "tbl_df")
+  expect_true(all(c("Title", "Acronym", "Version") %in% names(result)))
+  expect_gt(nrow(result), 0L)
+  expect_true("SFS" %in% result$Acronym)
+  expect_true("Census" %in% result$Acronym)
+})
+
+test_that("list_canpumf_collection: warns and returns fallback when StatCan unreachable", {
+  with_mocked_bindings(
+    read_html = function(...) stop("simulated network error"),
+    .package  = "rvest",
+    {
+      expect_warning(
+        result <- list_canpumf_collection(),
+        regexp = "unreachable"
+      )
+      expect_true("Census" %in% result$Acronym)
+      expect_gt(nrow(result), 0L)
+    }
+  )
+})
+
+test_that("list_available_lfs_pumf_versions: returns tibble with date/version/url", {
+  skip_if_offline()
+  tryCatch({
+    result <- list_available_lfs_pumf_versions()
+    expect_s3_class(result, "tbl_df")
+    expect_true(all(c("Date", "version", "url") %in% names(result)))
+    expect_gt(nrow(result), 0L)
+    expect_true(any(grepl("^\\d{4}$", result$version)))
+  }, error = function(e) skip(paste("StatCan unreachable:", conditionMessage(e))))
+})
