@@ -28,6 +28,23 @@ chs_pumf |>
   head(10)
 
 ## -----------------------------------------------------------------------------
+# what the cross-check concluded about this survey's data
+table(pumf_freq_validation(chs_pumf)$status)
+
+# every divergence found, repaired or not
+pumf_label_repairs(chs_pumf) |> head()
+
+## ----eval=FALSE---------------------------------------------------------------
+# gss <- get_pumf("GSS", "Cycle 16 (2002)")
+# 
+# pumf_label_repairs(gss, action = "repaired") |>
+#   select(name, label_command_file, label_pdf)
+# #> # A tibble: 1,679 x 3
+# #>   name      label_command_file                                            label_pdf
+# #>   ACMPRYR_C "During the past 12 months, was your spouse's/partner's main"  "During the past 12 months, was your spouse's/partner's main activity working at a paid job or business, looking for paid work, going to school, caring for children, household work, retired or something else?"
+# #>   ...
+
+## -----------------------------------------------------------------------------
 renter_chs_pumf <- chs_pumf |>
   filter((Tenure == "No" & 
             `Previous accommodations - when move to current dwelling occurred` == "10 or more years ago + Always lived here") | 

@@ -408,7 +408,7 @@ modules and how to open one:</p>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a></span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>main <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span>
 <span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; # A query:  ?? x 5</span></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; # Database: DuckDB 1.5.4 [root@Darwin 25.5.0:R 4.6.0//Users/jens/data/pumf.data/GSS/Cycle 16 (2002)/GSS_Cycle_16__2002_.duckdb]</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; # Database: DuckDB 1.5.4 [root@Darwin 27.0.0:R 4.6.0//Users/jens/data/pumf.data/GSS/Cycle 16 (2002)/GSS_Cycle_16__2002_.duckdb]</span></span>
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;   RECID WGHT_PER AGE_2001_GR5      AGE_2001_GR10     SEX   </span></span>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;             &lt;fct&gt;             &lt;fct&gt; </span></span>
 <span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; 1     1     367. 45 to 49          45 to 54          Female</span></span>
@@ -432,19 +432,19 @@ connection. The first time you open a module for a survey,
 <code>canpumf</code> reminds you of the key the modules join on:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>cg4 <span class="ot">&lt;-</span> <span class="fu">pumf_module</span>(main, <span class="st">&quot;CG4&quot;</span>)   <span class="co"># the caregiving module</span></span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; GSS/Cycle 16 (2002) modules join on &#39;RECID&#39; (e.g. dplyr::inner_join(main, CG4, by = &quot;RECID&quot;)).</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; GSS/2002 modules join on &#39;RECID&#39; (e.g. dplyr::inner_join(main, CG4, by = &quot;RECID&quot;)).</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; GSS/Cycle 16 (2002) modules join on &#39;RECID&#39; (e.g. dplyr::inner_join(main, CG4, by = &quot;RECID&quot;)).</span></span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>cg4 <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; # A query:  ?? x 5</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; # Database: DuckDB 1.5.4 [root@Darwin 25.5.0:R 4.6.0//Users/jens/data/pumf.data/GSS/Cycle 16 (2002)/GSS_Cycle_16__2002_.duckdb]</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; # Database: DuckDB 1.5.4 [root@Darwin 27.0.0:R 4.6.0//Users/jens/data/pumf.data/GSS/Cycle 16 (2002)/GSS_Cycle_16__2002_.duckdb]</span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;   RECID PERSONID CG4_FR_Q100_C                           CG4_FR_Q104 CG4_FR_Q105</span></span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;                                   &lt;fct&gt;       &lt;fct&gt;      </span></span>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; 1     6        1 Neighbour of respondent                 Not asked   Not asked  </span></span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 2     7        1 Father of respondent                    No          Not asked  </span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 3    10        1 Aunt of respondent                      Not asked   Not asked  </span></span>
 <span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 4    14        1 Close friend of respondent              Not asked   Not asked  </span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 5    14        2 Co-worker of respondent and Other rela… Not asked   Not asked  </span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 6    14        3 Co-worker of respondent and Other rela… Not asked   Not asked</span></span></code></pre></div>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 5    14        2 Other (Do not include organizations he… Not asked   Not asked  </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 6    14        3 Other (Do not include organizations he… Not asked   Not asked</span></span></code></pre></div>
 </div>
 <div id="joining-modules-for-analysis" class="section level2">
 <h2>Joining modules for analysis</h2>
@@ -520,8 +520,8 @@ then manually select appropriate subtables:</p>
 <div id="notes" class="section level2">
 <h2>Notes</h2>
 <ul>
-<li><code>get_pumf(&quot;GSS&quot;, &quot;2002&quot;, module = &quot;CG4&quot;)</code> opens a module
-<strong>standalone</strong> (its own connection). Prefer
+<li><code>get_pumf(&quot;GSS&quot;, &quot;Cycle 16 (2002)&quot;, module = &quot;CG4&quot;)</code>
+opens a module <strong>standalone</strong> (its own connection). Prefer
 <code>pumf_module()</code> when you intend to join, so both tbls share
 one connection.</li>
 <li>The join key is recorded in the survey registry and surfaced in the

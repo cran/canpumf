@@ -161,3 +161,78 @@ lfs_pumf |>
 ## -----------------------------------------------------------------------------
 lfs_pumf |> close_pumf()
 
+## -----------------------------------------------------------------------------
+lfs_hist_1995_06 <- get_pumf("LFS_HIST", "1995-06")  # one month
+lfs_hist_1995_06 |> 
+  count(LFSSTAT, wt = FWEIGHT) |>
+  collect()
+
+## -----------------------------------------------------------------------------
+lfs_hist <- get_pumf("LFS_HIST", refresh = "auto")
+
+## -----------------------------------------------------------------------------
+lfs_tl <- get_lfs_timeline(refresh = "auto")
+pumf_var_labels(lfs_tl)
+
+## -----------------------------------------------------------------------------
+lf_monthly <- lfs_tl |>
+  filter(LFSSTAT != "Not in labour force") |>
+  add_lfs_SURVDATE() |>
+  summarise(labour_force = sum(FINALWT),
+            unemployed = sum(FINALWT[LFSSTAT == "Unemployed"], na.rm = TRUE),
+            .by = c(SURVDATE, GENDER_SEX)) |>
+  mutate(rate = unemployed / labour_force) |>
+  collect()
+
+lf_monthly |>
+  ggplot(aes(x = SURVDATE, y = rate, colour = GENDER_SEX)) +
+  geom_line(alpha = 0.3) +
+  geom_smooth(method = "loess", span = 0.05, se = FALSE, linewidth = 0.8) +
+  geom_vline(xintercept = as.Date("2006-01-01"), linetype = "dashed") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Unemployment rate by gender/sex, 1976 onward",
+       subtitle = "Monthly, not seasonally adjusted; dashed line: LFS_HIST to LFS",
+       x = NULL, y = "Unemployment rate", colour = NULL,
+       caption = "StatCan LFS PUMF (1976-2005 via Borealis/ODESI)")
+
+## -----------------------------------------------------------------------------
+core_age <- c("25 to 29 years", "30 to 34 years", "35 to 39 years", "40 to 44 years",
+              "45 to 49 years", "50 to 54 years")
+
+participation <- lfs_tl |>
+  filter(AGE_12 %in% core_age) |>
+  summarise(population = sum(FINALWT),
+            labour_force = sum(FINALWT[LFSSTAT != "Not in labour force"], na.rm = TRUE),
+            .by = c(SURVYEAR, GENDER_SEX)) |>
+  mutate(rate = labour_force / population) |>
+  collect()
+
+participation |>
+  ggplot(aes(x = SURVYEAR, y = rate, colour = GENDER_SEX)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Labour force participation of 25 to 54 year olds",
+       subtitle = "Pooled monthly samples of each year",
+       x = NULL, y = "Participation rate", colour = NULL,
+       caption = "StatCan LFS PUMF (1976-2005 via Borealis/ODESI)")
+
+## -----------------------------------------------------------------------------
+lfs_tl |>
+  filter(LFSSTAT %in% c("Employed, at work", "Employed, absent from work"),
+         !is.na(HRLYEARN)) |>
+  summarise(wage = sum(HRLYEARN * FINALWT) / sum(FINALWT),
+            .by = c(SURVYEAR, CMA)) |>
+  collect() |>
+  ggplot(aes(x = SURVYEAR, y = wage, colour = CMA)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::dollar) +
+  labs(title = "Average usual hourly wage of employees",
+       subtitle = "Nominal dollars",
+       x = NULL, y = NULL, colour = NULL,
+       caption = "StatCan LFS PUMF (1997-2005 via Borealis/ODESI)")
+
+## -----------------------------------------------------------------------------
+close_pumf(lfs_tl)
+close_pumf(lfs_hist)
+close_pumf(lfs_hist_1995_06)
+

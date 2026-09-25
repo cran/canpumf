@@ -1,7 +1,7 @@
 ## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(echo = FALSE)
 
-## ----pipeline-diagram, echo=FALSE, out.width="100%", fig.alt="canpumf pipeline: get_pumf dispatches LFS vs. the three-stage pipeline (locate/download, parse metadata, build DuckDB), then registers provenance and returns a lazy tbl."----
+## ----pipeline-diagram, echo=FALSE, out.width="100%", fig.alt="canpumf pipeline: get_pumf dispatches LFS vs. the three-stage pipeline (locate/download, parse metadata, build DuckDB), then registers provenance and returns a lazy tbl. In stage 2, nine parsers feed merge_metadata(), except the user-guide frequency dictionary, which instead goes through a cross-check that repairs truncated labels before the canonical CSVs are written."----
 # The diagram is rendered to a static image (SVG for HTML, PNG for PDF) via
 # Graphviz so it renders identically and reliably in every output format,
 # without relying on JavaScript htmlwidgets (which never render in PDF).
@@ -55,13 +55,26 @@ digraph pipeline {
     P6   [label = "SPSS .sav", shape = box];
     P7   [label = "PDF Dictionary", shape = box];
     P8   [label = "PDF frequency codebook", shape = box];
+    P9   [label = "PDF user-guide frequency dictionary", shape = box];
     MRG  [label = "merge_metadata()", shape = box];
+    XC   [label = "guide describes this file?\n(frequencies or positions)",
+          shape = diamond, fillcolor = "#fce8b2"];
+    RP   [label = "repair truncated labels\n+ pdf_validation.csv / label_repairs.csv",
+          shape = box];
     WR   [label = "write variables.csv / codes.csv / layout.csv", shape = box];
 
     MC -> DF [label = "no / refresh"];
     DF -> P1; DF -> P2; DF -> P3; DF -> P4; DF -> P5; DF -> P6; DF -> P7; DF -> P8;
     P1 -> MRG; P2 -> MRG; P3 -> MRG; P4 -> MRG; P5 -> MRG; P6 -> MRG; P7 -> MRG; P8 -> MRG;
     MRG -> WR;
+
+    // Parser 9 bypasses the merge: the command file stays authoritative and the
+    // guide is only ever used to repair it, after the cross-check accepts it.
+    DF -> P9;
+    P9 -> XC;
+    MRG -> XC [style = dashed];
+    XC -> RP [label = "yes"];
+    RP -> WR;
   }
 
   EXTR -> MC [label = "yes", lhead = cluster_s2];

@@ -20,7 +20,7 @@ main |> select(1:5) |> head()
 
 ## -----------------------------------------------------------------------------
 cg4 <- pumf_module(main, "CG4")   # the caregiving module
-#> GSS/2002 modules join on 'RECID' (e.g. dplyr::inner_join(main, CG4, by = "RECID")).
+#> GSS/Cycle 16 (2002) modules join on 'RECID' (e.g. dplyr::inner_join(main, CG4, by = "RECID")).
 
 cg4 |> select(1:5) |> head()
 

@@ -1,7 +1,7 @@
 Package: canpumf
 Type: Package
 Title: Parse StatCan PUMF Files
-Version: 0.5.2
+Version: 0.6.0
 Authors@R: c(
     person("Jens", "von Bergmann", email = "jens@mountainmath.ca", role = c("aut", "cre"))
     )
@@ -18,8 +18,8 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Depends: R (>= 4.2)
 Imports: dplyr (>= 1.1.0), readr, stringr, rlang, utils, tibble, rvest,
-        httr, purrr, DBI, duckdb (>= 1.5.2), duckplyr (>= 1.2.1),
-        dbplyr, haven (>= 2.5.0), zip
+        httr, curl, jsonlite, purrr, DBI, duckdb (>= 1.5.2), dbplyr,
+        haven (>= 2.5.0), zip
 Suggests: rmarkdown, knitr, scales, ggplot2, testthat (>= 3.0.0),
         withr, microbenchmark, DiagrammeR, DiagrammeRsvg, rsvg,
         pdftools, tidyr
@@ -30,8 +30,8 @@ VignetteBuilder: knitr
 Language: en-CA
 Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-06-27 16:14:21 UTC; jens
+Packaged: 2026-09-25 00:00:20 UTC; jens
 Author: Jens von Bergmann [aut, cre]
 Maintainer: Jens von Bergmann <jens@mountainmath.ca>
 Repository: CRAN
-Date/Publication: 2026-07-03 12:10:09 UTC
+Date/Publication: 2026-09-25 02:20:02 UTC
